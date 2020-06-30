@@ -1,35 +1,46 @@
+from time import sleep
+import os
 import requests
 import config
 import json
-import argparse
 
 
-def getDataFromAPI(endpoint, headersDict):
-    try:
-        jsonResponse = requests.get(
-            config.apiEndpoint + endpoint,
-            headers = headersDict
-        ).json()
-        return jsonResponse
-    except:
-        print("[*] Request or Token Error")
-        exit()
+def sendRequest(endpoint, method):
+    if method == 'GET':
+        try:
+            jsonResponse = requests.get(
+                config.apiEndpoint + endpoint,
+                headers = {'X-Token': config.apiToken}
+            )
+            return jsonResponse.json()
+        except:
+            print("[*] Request or Token Error")
+            print("[*] Status: " + jsonResponse.status_code)
+            exit()
 
-def banner(accountName,accountBalance):
+def menu():
     print(r"""
+______________________________________________________________________________________
                                  .-.
                                 (o o) boo BLYAT!
                                 | O \
                                 \   \
                                 `~~~'
-                            [[Account name: %s]]
-                               [[Balance: %s]]
-    
-    """ % (accountName, accountBalance))
 
-def parseServersInfo(serversJson):
+                                [[MENU]]
+                            [1] Available Servers
+                            [2] Balance
+                            [3] Backups
+                            [4] Create Server
+                            [5] Delete Server 
+                            [6] SSH to Server
+                            [7] Exit
+_____________________________________________________________________________________
+    """)
+
+def parseServersInfo(request):
     result = []
-    for server in serversJson:
+    for server in request:
         result.append({
             'srvid': server['ctid'],
             'srvname': server['name'],
@@ -39,16 +50,28 @@ def parseServersInfo(serversJson):
     if not result:
         print("[*] No servers found.")
         exit()
-    else:
-        return result
-
+    return result
 
 if __name__ == '__main__':
-    #Get accountName and accountBalance from API
-    accountNameJson = getDataFromAPI('account', {'X-Token': config.apiToken})
-    accountBalanceJson = getDataFromAPI('billing/balance', {'X-Token': config.apiToken})
-    banner(accountNameJson['info']['name'], accountBalanceJson['balance'])
-    print(parseServersInfo(getDataFromAPI('scalets',{'X-Token': config.apiToken})))
+    menu()
+    switch = input("[*] >> ")
+    if switch == '1':
+        availableServers = parseServersInfo(sendRequest('scalets','GET'))
+        for server in availableServers:
+            print("[*] ServerID: " + str(server['srvid']) + '\n' +
+                  "[*] ServerName: " + str(server['srvname']) + '\n' +
+                  "[*] ServerStatus: " + str(server['srvstatus']) + '\n' +
+                  "[*] ServerIP: " + str(server['srvip'])
+            )
+            print(r"""
+_____________________________________________________________________________________
+            """)
+    elif switch == '2':
+        balance = str(sendRequest('billing/balance','GET')['balance'])
+        print("[*] Current Balance: " + balance)
+    else:
+        print("[*] Error.")
+    
 
 
     
