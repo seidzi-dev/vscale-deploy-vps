@@ -49,12 +49,20 @@ def parseServersInfo(request):
         })
     if not result:
         print("[*] No servers found.")
-        exit()
+        backToMenu()
     return result
 
-if __name__ == '__main__':
+def backToMenu():
+    option = input("[*] Return to main menu or exit? Y/n ")
+    if option.lower() == 'y':
+        handleUserInput()
+    else:
+        print("[*] Exiting...")
+        exit()
+
+def handleUserInput():
     menu()
-    switch = input("[*] >> ")
+    switch = input("[*] >>_ ")
     if switch == '1':
         availableServers = parseServersInfo(sendRequest('scalets','GET'))
         for server in availableServers:
@@ -66,11 +74,16 @@ if __name__ == '__main__':
             print(r"""
 _____________________________________________________________________________________
             """)
+        backToMenu()
     elif switch == '2':
         balance = str(sendRequest('billing/balance','GET')['balance'])
         print("[*] Current Balance: " + balance)
+        backToMenu()
     else:
         print("[*] Error.")
+
+if __name__ == '__main__':
+    handleUserInput()
     
 
 
